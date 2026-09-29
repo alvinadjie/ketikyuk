@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#4b0082">
 <meta name="description" content="Belajar mengetik huruf dan kata sambil bermain.">
 <meta name="mobile-web-app-capable" content="yes">
@@ -14,12 +14,12 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <title>Ketik Yuk!</title>
 <style>
-html,body{margin:0;height:100%;background:linear-gradient(160deg,#4b0082,#7b2ff7,#00c9a7);color:#fff;font-family:sans-serif;overflow:hidden;user-select:none;-webkit-user-select:none}
-#app{display:flex;flex-direction:column;align-items:center;justify-content:space-between;height:100%;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));box-sizing:border-box}
+html,body{margin:0;height:100%;width:100%;position:fixed;inset:0;background:linear-gradient(160deg,#4b0082,#7b2ff7,#00c9a7);color:#fff;font-family:sans-serif;overflow:hidden;user-select:none;-webkit-user-select:none}
+#app{position:fixed;left:0;top:var(--vt,0px);width:100%;height:var(--vh,100%);display:flex;flex-direction:column;align-items:center;justify-content:space-between;height:100%;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));box-sizing:border-box}
 #top{width:100%;max-width:420px;display:flex;justify-content:space-between;font-weight:bold;font-size:16px;text-shadow:0 1px 3px #0006}
-#stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;gap:18px}
-#card{background:#ffffff22;border:3px solid #ffffff55;border-radius:28px;width:min(94vw,520px);min-height:min(78vw,360px);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 0 #00000022;padding:14px;box-sizing:border-box;position:relative}
-#target{font-size:min(32vw,130px);font-weight:900;letter-spacing:4px;display:flex}
+#stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;gap:14px}
+#card{background:#ffffff22;border:3px solid #ffffff55;border-radius:28px;width:min(94vw,720px);flex:1 1 0;min-height:0;max-height:min(78vw,360px);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 0 #00000022;padding:14px;box-sizing:border-box;position:relative}
+#target{font-size:min(32vw,130px);font-weight:900;letter-spacing:4px;display:flex;white-space:nowrap;line-height:1}
 #target.shake{animation:shake .35s}
 #target span{display:inline-block;transition:.15s}
 #target span.ok{color:#7CFC00;transform:scale(1.15)}
@@ -31,7 +31,12 @@ html,body{margin:0;height:100%;background:linear-gradient(160deg,#4b0082,#7b2ff7
 #fx{position:fixed;inset:0;pointer-events:none}
 .ov{position:fixed;inset:0;background:linear-gradient(160deg,#4b0082dd,#7b2ff7dd);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:20px;box-sizing:border-box}
 button{font-size:22px;padding:12px 36px;border:0;border-radius:24px;background:#ffd93d;color:#4b0082;font-weight:bold;box-shadow:0 4px 0 #c9a415}
-#kbd{position:absolute;opacity:0;height:0;width:0;pointer-events:none}
+#kbd{position:fixed;top:0;left:0;opacity:0;height:1px;width:1px;font-size:16px;border:0;padding:0;pointer-events:none}
+body.compact #hint,body.compact #modebar{display:none}
+body.compact #top{font-size:13px}
+body.compact #app{padding-top:6px;padding-bottom:6px}
+body.compact #stage{gap:6px}
+body.compact #card{max-height:none;border-radius:20px;padding:6px}
 #modebar{display:flex;gap:12px;font-size:20px}
 .mchip{padding:10px 24px;border-radius:20px;background:#ffffff22;font-weight:bold}
 .mchip.on{background:#ffd93d;color:#4b0082}
@@ -109,7 +114,23 @@ function renderWord(typed=''){
   }).join('');
   lv.textContent='Kata '+(wi+1)+' / '+wordShuffled.length;
 }
-function render(){ mode==='huruf'?renderLetter():renderWord(); }
+function fit(){
+  const c=$('card');
+  const w=c.clientWidth-28,h=c.clientHeight-28;
+  if(w<=0||h<=0)return;
+  let fs=Math.max(24,Math.min(220,h*.8));
+  target.style.fontSize=fs+'px';
+  while(target.getBoundingClientRect().width>w&&fs>20){fs-=4;target.style.fontSize=fs+'px'}
+}
+function vp(){
+  const v=window.visualViewport,h=v?v.height:innerHeight,r=document.documentElement.style;
+  r.setProperty('--vh',h+'px');
+  r.setProperty('--vt',(v?v.offsetTop:0)+'px');
+  document.body.classList.toggle('compact',h<420);
+  window.scrollTo(0,0);
+  fit();
+}
+function render(){ mode==='huruf'?renderLetter():renderWord(); fit(); }
 
 const badge=$('badge');
 function speedEmoji(ms){ return ms<4000?'🐆' : ms<8000?'🐴' : '🐌' }
@@ -204,6 +225,12 @@ $('go').onclick=()=>{
   setTimeout(()=>kbd.focus(),200);
 };
 setModeChips();
+vp();
+addEventListener('resize',vp);
+addEventListener('orientationchange',()=>setTimeout(vp,250));
+if(window.visualViewport){visualViewport.addEventListener('resize',vp);visualViewport.addEventListener('scroll',vp)}
+kbd.addEventListener('focus',()=>setTimeout(vp,300));
+kbd.addEventListener('blur',()=>setTimeout(vp,300));
 
 /* ---------- PWA: service worker ---------- */
 if('serviceWorker' in navigator){

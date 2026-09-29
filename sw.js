@@ -1,4 +1,4 @@
-const CACHE = 'ketik-yuk-v1';
+const CACHE = 'ketik-yuk-v2';
 const ASSETS = [
   './',
   './index.html',
